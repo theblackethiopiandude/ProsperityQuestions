@@ -218,11 +218,12 @@ function GamePage() {
 
     if (isAnswerCorrect) {
       playSuccessSound();
-      // Update global state with Zustand
-      markQuestionAsCompleted(selectedNumber!, answerIndex);
     } else {
       playErrorSound();
     }
+
+    // Always mark question as completed regardless of correctness
+    markQuestionAsCompleted(selectedNumber!, answerIndex);
 
     // Show the result dialog
     setShowResultDialog(true);
@@ -243,6 +244,9 @@ function GamePage() {
     setIsCorrect(false);
     setSelectedAnswerIndex(correctAnswerIndex);
     playErrorSound();
+
+    // Mark question as completed even when revealing the answer
+    markQuestionAsCompleted(selectedNumber!, correctAnswerIndex);
 
     // Show the result dialog
     setShowResultDialog(true);
@@ -323,10 +327,10 @@ function GamePage() {
       <div className="container mx-auto mw-full">
         {/* Back navigation button - only shown on grid view */}
         {!isQuestionVisible && (
-          <div className="mb-6">
+          <div className="mb-6 animate-fade-in">
             <Button
               variant="outline"
-              className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2"
+              className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 hover:scale-105 transition-transform"
               onClick={handleBackToHome}
             >
               ← Back to Home
@@ -334,13 +338,13 @@ function GamePage() {
           </div>
         )}
 
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900 mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-900 mb-8 animate-fade-in">
           የጥያቄ ዝርዝር
         </h1>
 
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 w-full">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 w-full transition-all duration-500 ease-in-out animate-slide-up">
           {!isQuestionVisible ? (
-            <div className="space-y-8">
+            <div className="space-y-8 animate-fade-in">
               <p className="text-gray-700 text-2xl text-center">
                 በየካ ብልፅግና ፓርቲ ቅርንጫፍ ጽ/ቤት የፖለቲካ አቅም ግንባታ ዘርፍ ለመሰረታዊ ድርጅት የተዘጋጀ
                 የጥያቄና መልስ ውድድር መድረክ (የተዘጋጁ ጥያቄዎች)
@@ -353,13 +357,13 @@ function GamePage() {
               />
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               <div className="flex justify-between items-center mb-4">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCloseQuestion}
-                  className="bg-white text-gray-700 hover:bg-gray-50"
+                  className="bg-white text-gray-700 hover:bg-gray-50 hover:scale-105 transition-transform"
                 >
                   ← Back to Grid
                 </Button>
@@ -369,7 +373,7 @@ function GamePage() {
                     Question {selectedNumber}
                   </h2>
                   {isPreviouslyAnswered && (
-                    <div className="text-sm text-green-600 font-medium mt-1 text-right">
+                    <div className="text-sm text-green-600 font-medium mt-1 text-right animate-pulse">
                       You've already answered this question correctly!
                     </div>
                   )}
@@ -377,7 +381,7 @@ function GamePage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-                <div className="bg-white rounded-lg">
+                <div className="bg-white rounded-lg animate-slide-in-left">
                   <QuestionCard
                     question={questionsData[selectedNumber! - 1]}
                     selectedAnswerIndex={selectedAnswerIndex}
@@ -386,10 +390,10 @@ function GamePage() {
                   />
 
                   {!isAnswered && !isPreviouslyAnswered && (
-                    <div className="flex justify-center mt-6">
+                    <div className="flex justify-center mt-6 animate-bounce-slow">
                       <Button
                         variant="secondary"
-                        className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-2 border-amber-300 text-lg py-5 px-8 font-medium shadow-md w-full hover:shadow-lg transition-all"
+                        className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-2 border-amber-300 text-lg py-5 px-8 font-medium shadow-md w-full hover:shadow-lg transition-all hover:scale-105"
                         onClick={handleRevealAnswer}
                       >
                         Reveal Answer
@@ -398,7 +402,7 @@ function GamePage() {
                   )}
 
                   {showTimeUpMessage && (
-                    <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-md text-center font-medium">
+                    <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-md text-center font-medium animate-pulse">
                       Time's up! You didn't answer in time.
                     </div>
                   )}
@@ -407,7 +411,7 @@ function GamePage() {
                   {isAnswered &&
                     isCorrect === false &&
                     !isPreviouslyAnswered && (
-                      <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-md text-center font-medium">
+                      <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-md text-center font-medium animate-fade-in">
                         Incorrect. The correct answer is:{" "}
                         {getCorrectAnswerText(selectedNumber!)}
                       </div>
@@ -417,13 +421,13 @@ function GamePage() {
                   {isAnswered &&
                     isCorrect === true &&
                     !isPreviouslyAnswered && (
-                      <div className="mt-4 p-3 bg-green-50 text-green-600 rounded-md text-center font-medium">
+                      <div className="mt-4 p-3 bg-green-50 text-green-600 rounded-md text-center font-medium animate-fade-in">
                         Correct! Well done!
                       </div>
                     )}
                 </div>
 
-                <div>
+                <div className="animate-slide-in-right">
                   {!isPreviouslyAnswered && (
                     <CountdownTimer
                       isRunning={timerRunning}
@@ -436,9 +440,9 @@ function GamePage() {
                     />
                   )}
                   {isPreviouslyAnswered && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center">
+                    <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center animate-pulse">
                       <div className="text-center py-6">
-                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

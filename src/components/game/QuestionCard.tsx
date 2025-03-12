@@ -45,32 +45,52 @@ const QuestionCard: FC<QuestionCardProps> = ({
 
   return (
     <div className="space-y-8">
-      <h3 className="text-2xl md:text-3xl font-semibold text-gray-800 text-center mb-8 leading-relaxed">
+      <h3 className="text-2xl md:text-3xl font-semibold text-gray-800 text-center mb-8 leading-relaxed animate-slide-up">
         {question.question}
       </h3>
 
       <div className="grid grid-cols-1 gap-6">
-        {question.options.map((option, index) => (
-          <button
-            key={index}
-            onClick={() => !isAnswered && onSelectAnswer(index)}
-            disabled={isAnswered}
-            className={`
-              p-5 rounded-lg text-left transition-colors h-full
-              ${getOptionStyle(index)}
-              ${selectedAnswerIndex === index ? "ring-2 ring-blue-500" : ""}
-            `}
-          >
-            <div className="flex items-start">
-              <span className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium mr-4 text-xl shrink-0">
-                {getAmharicLabel(index)}
-              </span>
-              <span className="font-medium text-lg md:text-xl leading-relaxed pt-1">
-                {option}
-              </span>
-            </div>
-          </button>
-        ))}
+        {question.options.map((option, index) => {
+          // Add staggered animation delay based on index
+          const animationDelay = `${index * 0.1 + 0.2}s`;
+          const isCorrectAnswer =
+            isAnswered && index === question.correctAnswer;
+          const isWrongSelection =
+            isAnswered &&
+            selectedAnswerIndex === index &&
+            index !== question.correctAnswer;
+
+          // Add special animations for correct/incorrect answers
+          const answerAnimation = isCorrectAnswer
+            ? "animate-pulse"
+            : isWrongSelection
+            ? "animate-shake"
+            : "animate-slide-in-left";
+
+          return (
+            <button
+              key={index}
+              onClick={() => !isAnswered && onSelectAnswer(index)}
+              disabled={isAnswered}
+              style={{ animationDelay }}
+              className={`
+                p-5 rounded-lg text-left transition-all h-full
+                ${getOptionStyle(index)}
+                ${selectedAnswerIndex === index ? "ring-2 ring-blue-500" : ""}
+                ${answerAnimation} hover:scale-[1.02] active:scale-[0.98]
+              `}
+            >
+              <div className="flex items-start">
+                <span className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium mr-4 text-xl shrink-0">
+                  {getAmharicLabel(index)}
+                </span>
+                <span className="font-medium text-lg md:text-xl leading-relaxed pt-1">
+                  {option}
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
