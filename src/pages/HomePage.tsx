@@ -31,12 +31,12 @@ function HomePage() {
       <section className="flex-grow flex items-center justify-center py-8 px-4">
         <div className="container mx-auto relative">
           {/* Floating Elements */}
-          <div className="absolute -top-20 left-1/4 w-32 h-32 rounded-full bg-blue-100 opacity-70 animate-pulse"></div>
-          <div className="absolute top-60 right-1/4 w-24 h-24 rounded-full bg-blue-200 opacity-60 animate-pulse delay-300"></div>
-          <div className="absolute bottom-20 left-20 w-36 h-36 rounded-full bg-blue-100 opacity-50 animate-pulse delay-700"></div>
+          <div className="absolute z-0 -top-20 left-1/4 w-32 h-32 rounded-full bg-blue-100 opacity-70 animate-pulse"></div>
+          <div className="absolute z-0 top-60 right-1/4 w-24 h-24 rounded-full bg-blue-200 opacity-60 animate-pulse delay-300"></div>
+          <div className="absolute z-0 bottom-20 left-20 w-36 h-36 rounded-full bg-blue-100 opacity-50 animate-pulse delay-700"></div>
 
           <div className="max-w-5xl mx-auto text-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-blue-900 mb-8">
+            <h1 className="text-5xl md:text-7xl font-bold text-blue-900 mb-8 z-50">
               በየካ ብልፅግና ፓርቲ ቅርንጫፍ ጽ/ቤት የፖለቲካ አቅም ግንባታ ዘርፍ ለመሰረታዊ ድርጅት የተዘጋጀ
               የጥያቄና መልስ ውድድር መድረክ (የተዘጋጁ ጥያቄዎች)
             </h1>
