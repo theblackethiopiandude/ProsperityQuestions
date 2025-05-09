@@ -1,97 +1,141 @@
 import { FC } from "react";
-
-interface Question {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-}
+import { Question } from "../../data/questions";
+import { Button } from "../ui/button";
 
 interface QuestionCardProps {
   question: Question;
+  onSelectAnswer: (answerIndex: number) => void;
   selectedAnswerIndex: number | null;
   isAnswered: boolean;
-  onSelectAnswer: (answerIndex: number) => void;
+  isCorrect: boolean | null;
+  onRevealAnswer: () => void;
+  isPreviouslyAnswered: boolean;
+  showTimeUpMessage: boolean;
 }
 
 const QuestionCard: FC<QuestionCardProps> = ({
   question,
+  onSelectAnswer,
   selectedAnswerIndex,
   isAnswered,
-  onSelectAnswer,
+  isCorrect,
+  onRevealAnswer,
+  isPreviouslyAnswered,
+  showTimeUpMessage,
 }) => {
-  // Function to determine option styling based on state
-  const getOptionStyle = (index: number) => {
-    if (!isAnswered) {
-      return "bg-white border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50";
-    }
-
-    if (index === question.correctAnswer) {
-      return "bg-green-100 border-2 border-green-500 text-green-700";
-    }
-
-    if (index === selectedAnswerIndex && index !== question.correctAnswer) {
-      return "bg-red-100 border-2 border-red-500 text-red-700";
-    }
-
-    return "bg-white border-2 border-gray-200 opacity-70";
-  };
-
-  // Amharic characters for option labels
-  const getAmharicLabel = (index: number): string => {
-    const amharicLabels = ["ሀ", "ለ", "ሐ", "መ", "ሠ", "ረ", "ሰ", "ሸ", "ቀ", "በ"];
-    return amharicLabels[index] || String.fromCharCode(65 + index);
-  };
-
   return (
-    <div className="space-y-8">
-      <h3 className="text-2xl md:text-3xl font-semibold text-gray-800 text-center mb-8 leading-relaxed animate-slide-up">
-        {question.question}
-      </h3>
-
-      <div className="grid grid-cols-1 gap-6">
-        {question.options.map((option, index) => {
-          // Add staggered animation delay based on index
-          const animationDelay = `${index * 0.1 + 0.2}s`;
-          const isCorrectAnswer =
-            isAnswered && index === question.correctAnswer;
-          const isWrongSelection =
-            isAnswered &&
-            selectedAnswerIndex === index &&
-            index !== question.correctAnswer;
-
-          // Add special animations for correct/incorrect answers
-          const answerAnimation = isCorrectAnswer
-            ? "animate-pulse"
-            : isWrongSelection
-            ? "animate-shake"
-            : "animate-slide-in-left";
-
-          return (
-            <button
-              key={index}
-              onClick={() => !isAnswered && onSelectAnswer(index)}
-              disabled={isAnswered}
-              style={{ animationDelay }}
-              className={`
-                p-5 rounded-lg text-left transition-all h-full
-                ${getOptionStyle(index)}
-                ${selectedAnswerIndex === index ? "ring-2 ring-blue-500" : ""}
-                ${answerAnimation} hover:scale-[1.02] active:scale-[0.98]
-              `}
-            >
-              <div className="flex items-start">
-                <span className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-medium mr-4 text-xl shrink-0">
-                  {getAmharicLabel(index)}
-                </span>
-                <span className="font-medium text-lg md:text-xl leading-relaxed pt-1">
-                  {option}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+    <div className="space-y-6">
+      <div className="p-5 bg-blue-50 rounded-lg shadow-sm">
+        <h3 className="text-xl font-medium text-blue-900 mb-1">Question:</h3>
+        <p className="text-lg text-gray-800">{question.question}</p>
       </div>
+
+      <div className="space-y-3">
+        <h3 className="text-xl font-medium text-blue-900">Choose an answer:</h3>
+        <div className="space-y-3">
+          {question.options.map((option, index) => {
+            // Determine the appropriate styles based on selection state
+            const isSelected = selectedAnswerIndex === index;
+            const isCorrectAnswer = question.correctAnswer === index;
+
+            let optionClass =
+              "border border-gray-300 hover:border-blue-500 hover:bg-blue-50";
+
+            if (isAnswered) {
+              if (isSelected && isCorrect) {
+                optionClass = "border-2 border-green-500 bg-green-50";
+              } else if (isSelected && !isCorrect) {
+                optionClass = "border-2 border-red-500 bg-red-50";
+              } else if (isCorrectAnswer && !isCorrect) {
+                optionClass = "border-2 border-green-500 bg-green-50";
+              }
+            } else if (isSelected) {
+              optionClass = "border-2 border-blue-500 bg-blue-50";
+            }
+
+            return (
+              <button
+                key={index}
+                onClick={() => {
+                  if (!isAnswered && !isPreviouslyAnswered) {
+                    onSelectAnswer(index);
+                  }
+                }}
+                className={`p-4 rounded-lg w-full text-left transition-all ${optionClass} ${
+                  isAnswered || isPreviouslyAnswered
+                    ? "cursor-default"
+                    : "cursor-pointer hover:shadow-md"
+                }`}
+                disabled={isAnswered || isPreviouslyAnswered}
+              >
+                <div className="flex items-start">
+                  <div
+                    className={`flex-shrink-0 w-6 h-6 mt-0.5 rounded-full flex items-center justify-center border ${
+                      isSelected
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : "border-gray-400"
+                    }`}
+                  >
+                    {isSelected && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="ml-3 text-base">{option}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Status messages */}
+      {showTimeUpMessage && (
+        <div className="p-3 bg-red-50 text-red-600 rounded-md font-medium text-center">
+          Time's up! You didn't answer in time.
+        </div>
+      )}
+
+      {isAnswered && isCorrect && (
+        <div className="p-3 bg-green-50 text-green-600 rounded-md font-medium text-center">
+          Correct! Great job!
+        </div>
+      )}
+
+      {isAnswered && isCorrect === false && (
+        <div className="p-3 bg-red-50 text-red-600 rounded-md font-medium text-center">
+          Incorrect. The correct answer is highlighted above.
+        </div>
+      )}
+
+      {isPreviouslyAnswered && (
+        <div className="p-3 bg-blue-50 text-blue-600 rounded-md font-medium text-center">
+          You've already answered this question correctly before.
+        </div>
+      )}
+
+      {/* Reveal button */}
+      {!isAnswered && !isPreviouslyAnswered && (
+        <div className="flex justify-center mt-4">
+          <Button
+            variant="outline"
+            className="border-amber-500 text-amber-700 hover:bg-amber-50"
+            onClick={onRevealAnswer}
+          >
+            Reveal Answer
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

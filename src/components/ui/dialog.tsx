@@ -1,178 +1,157 @@
-import React from "react";
+import { FC } from "react";
 import { Button } from "./button";
 
 interface DialogProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
-  primaryAction?: {
-    label: string;
-    onClick: () => void;
-    variant?: "primary" | "danger" | "success";
-  };
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
+  message: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm?: () => void;
+  variant?: "success" | "danger" | "warning" | "info";
 }
 
-export function Dialog({
-  isOpen,
-  onClose,
-  title,
-  children,
-  primaryAction,
-  secondaryAction,
-}: DialogProps) {
-  if (!isOpen) return null;
-
-  // Handle primary button style
-  const getPrimaryButtonClass = () => {
-    switch (primaryAction?.variant) {
-      case "danger":
-        return "bg-red-600 hover:bg-red-700 text-white";
-      case "success":
-        return "bg-green-600 hover:bg-green-700 text-white";
-      default:
-        return "bg-blue-600 hover:bg-blue-700 text-white";
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      ></div>
-
-      {/* Dialog */}
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md z-10 p-6 m-4 relative animate-in fade-in zoom-in-95 duration-200">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">{title}</h2>
-        <div className="py-2">{children}</div>
-
-        <div className="flex justify-end space-x-3 mt-6">
-          {secondaryAction && (
-            <Button
-              variant="outline"
-              onClick={secondaryAction.onClick}
-              className="border-gray-300 hover:bg-gray-50"
-            >
-              {secondaryAction.label}
-            </Button>
-          )}
-          {primaryAction && (
-            <Button
-              className={getPrimaryButtonClass()}
-              onClick={primaryAction.onClick}
-            >
-              {primaryAction.label}
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function ConfirmationDialog({
+export const ConfirmationDialog: FC<DialogProps> = ({
   isOpen,
   onClose,
   title,
   message,
-  confirmLabel = "Confirm",
+  confirmLabel,
   cancelLabel = "Cancel",
   onConfirm,
-  variant = "primary",
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
-  variant?: "primary" | "danger" | "success";
-}) {
-  return (
-    <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-      primaryAction={{
-        label: confirmLabel,
-        onClick: onConfirm,
-        variant,
-      }}
-      secondaryAction={{
-        label: cancelLabel,
-        onClick: onClose,
-      }}
-    >
-      <p className="text-gray-600">{message}</p>
-    </Dialog>
-  );
-}
+  variant = "warning",
+}) => {
+  if (!isOpen) return null;
 
-export function ResultDialog({
+  // Determine colors based on variant
+  const getVariantClasses = () => {
+    switch (variant) {
+      case "success":
+        return "bg-green-50 border-green-200";
+      case "danger":
+        return "bg-red-50 border-red-200";
+      case "warning":
+        return "bg-amber-50 border-amber-200";
+      case "info":
+      default:
+        return "bg-blue-50 border-blue-200";
+    }
+  };
+
+  const getButtonVariantClasses = () => {
+    switch (variant) {
+      case "success":
+        return "bg-green-600 hover:bg-green-700";
+      case "danger":
+        return "bg-red-600 hover:bg-red-700";
+      case "warning":
+        return "bg-amber-600 hover:bg-amber-700";
+      case "info":
+      default:
+        return "bg-blue-600 hover:bg-blue-700";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div
+          className={`relative rounded-lg border ${getVariantClasses()} p-6 shadow-xl transition-all w-full max-w-md`}
+        >
+          <div className="text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {title}
+            </h3>
+            <p className="text-gray-600 mb-6">{message}</p>
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="text-gray-700 hover:bg-gray-100"
+              >
+                {cancelLabel}
+              </Button>
+              {onConfirm && (
+                <Button
+                  onClick={onConfirm}
+                  className={`text-white ${getButtonVariantClasses()}`}
+                >
+                  {confirmLabel}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ResultDialog: FC<DialogProps> = ({
   isOpen,
   onClose,
-  isCorrect,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  isCorrect: boolean;
-}) {
+  title,
+  message,
+  confirmLabel = "Continue",
+  variant = "success",
+}) => {
+  if (!isOpen) return null;
+
+  // Determine colors based on variant
+  const getVariantClasses = () => {
+    switch (variant) {
+      case "success":
+        return "bg-green-50 border-green-200";
+      case "danger":
+        return "bg-red-50 border-red-200";
+      case "warning":
+        return "bg-amber-50 border-amber-200";
+      case "info":
+      default:
+        return "bg-blue-50 border-blue-200";
+    }
+  };
+
+  const getButtonVariantClasses = () => {
+    switch (variant) {
+      case "success":
+        return "bg-green-600 hover:bg-green-700";
+      case "danger":
+        return "bg-red-600 hover:bg-red-700";
+      case "warning":
+        return "bg-amber-600 hover:bg-amber-700";
+      case "info":
+      default:
+        return "bg-blue-600 hover:bg-blue-700";
+    }
+  };
+
   return (
-    <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
-      title={isCorrect ? "Correct!" : "Incorrect!"}
-      primaryAction={{
-        label: "Continue",
-        onClick: onClose,
-        variant: isCorrect ? "success" : "primary",
-      }}
-    >
-      <div className="flex flex-col items-center py-6">
-        {isCorrect ? (
-          <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6 animate-bounce">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-14 h-14 text-green-600"
-            >
-              <path
-                fillRule="evenodd"
-                d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
-                clipRule="evenodd"
-              />
-            </svg>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-8">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <div
+          className={`relative rounded-xl border-4 ${getVariantClasses()} p-10 shadow-2xl transition-all w-full max-w-2xl`}
+        >
+          <div className="text-center">
+            <h3 className="text-4xl font-bold text-gray-900 mb-6">{title}</h3>
+            <p className="text-2xl text-gray-700 mb-10">{message}</p>
+            <div className="flex justify-center">
+              <Button
+                onClick={onClose}
+                className={`text-white text-xl py-6 px-10 rounded-xl ${getButtonVariantClasses()}`}
+                size="lg"
+              >
+                {confirmLabel}
+              </Button>
+            </div>
           </div>
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6 animate-pulse">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-14 h-14 text-red-600"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-        )}
-        <p className="text-xl font-medium text-center">
-          {isCorrect
-            ? "Well done! You got the correct answer."
-            : "Sorry, that's not correct."}
-        </p>
+        </div>
       </div>
-    </Dialog>
+    </div>
   );
-}
+};

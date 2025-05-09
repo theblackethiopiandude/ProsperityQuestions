@@ -1,30 +1,35 @@
 import { FC, useEffect, useState, useRef } from "react";
 import { Button } from "../ui/button";
+import { Play, Pause, RotateCcw, Clock } from "lucide-react";
 
 interface CountdownTimerProps {
+  duration?: number;
   isRunning: boolean;
   onTimeUp: () => void;
   onStart: () => void;
   onStop: () => void;
   onReset: () => void;
-  initialTime?: number;
+  onTick?: () => void;
+  tickThreshold?: number;
   playTimerSound?: () => void;
   stopTimerSound?: () => void;
 }
 
 const CountdownTimer: FC<CountdownTimerProps> = ({
+  duration = 45,
   isRunning,
   onTimeUp,
   onStart,
   onStop,
   onReset,
-  initialTime = 30, // Default 30 seconds
+  onTick,
+  tickThreshold = 10,
   playTimerSound,
   stopTimerSound,
 }) => {
-  const [timeRemaining, setTimeRemaining] = useState(initialTime);
-  const [hasStarted, setHasStarted] = useState(false);
-  const timerIdRef = useRef<number | undefined>(undefined);
+  const [timeLeft, setTimeLeft] = useState(duration);
+  const [isPaused, setIsPaused] = useState(true);
+  const intervalRef = useRef<number | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   // Create a direct reference to an audio element for better control
@@ -69,12 +74,95 @@ const CountdownTimer: FC<CountdownTimerProps> = ({
     };
   }, []);
 
-  // Reset timer when stopped and reset
+  // Start or stop timer based on isRunning prop
   useEffect(() => {
-    if (!isRunning && !hasStarted) {
-      setTimeRemaining(initialTime);
+    if (isRunning) {
+      startTimer();
+    } else {
+      pauseTimer();
     }
-  }, [isRunning, hasStarted, initialTime]);
+  }, [isRunning]);
+
+  // Reset when duration changes
+  useEffect(() => {
+    setTimeLeft(duration);
+  }, [duration]);
+
+  const startTimer = () => {
+    setIsPaused(false);
+    onStart();
+
+    // Clear existing interval if any
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Set new interval
+    intervalRef.current = window.setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          // Time's up, clear interval and call callback
+          if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+          }
+          onTimeUp();
+          return 0;
+        }
+
+        const newTime = prevTime - 1;
+
+        // Call onTick when time is below threshold
+        if (onTick && newTime <= tickThreshold && newTime > 0) {
+          onTick();
+        }
+
+        return newTime;
+      });
+    }, 1000);
+  };
+
+  const pauseTimer = () => {
+    setIsPaused(true);
+    onStop();
+
+    // Clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  const resetTimer = () => {
+    setTimeLeft(duration);
+    setIsPaused(true);
+    onReset();
+
+    // Clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
+  // Format time as MM:SS
+  const formatTime = (timeInSeconds: number) => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = timeInSeconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // Get color classes based on time left
+  const getColorClasses = () => {
+    if (timeLeft <= 10) {
+      return "text-red-600 border-red-500";
+    } else if (timeLeft <= 30) {
+      return "text-amber-600 border-amber-500";
+    } else {
+      return "text-blue-600 border-blue-500";
+    }
+  };
 
   // Handle direct play of tick sound
   const playTick = () => {
@@ -109,94 +197,34 @@ const CountdownTimer: FC<CountdownTimerProps> = ({
   // Start the countdown when isRunning is true
   useEffect(() => {
     // Clear existing interval if there is one
-    if (timerIdRef.current) {
-      clearInterval(timerIdRef.current);
-      timerIdRef.current = undefined;
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
 
     if (isRunning) {
-      setHasStarted(true);
+      startTimer();
 
       // Play sound on start - play it as a continuous sound
       playTick();
-
-      timerIdRef.current = window.setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1) {
-            if (timerIdRef.current) {
-              clearInterval(timerIdRef.current);
-              timerIdRef.current = undefined;
-            }
-            stopTick();
-            onTimeUp();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
     } else {
       // Stop any playing audio when timer is paused
       stopTick();
     }
 
     return () => {
-      if (timerIdRef.current) {
-        clearInterval(timerIdRef.current);
-        timerIdRef.current = undefined;
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
 
       // Stop any playing audio when effect is cleaned up
       stopTick();
     };
-  }, [isRunning, onTimeUp, initialTime]);
-
-  // Format time as MM:SS
-  const formatTime = () => {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  // Reset timer
-  const handleReset = () => {
-    // Clear any existing timer
-    if (timerIdRef.current) {
-      clearInterval(timerIdRef.current);
-      timerIdRef.current = undefined;
-    }
-
-    // Stop any playing audio
-    stopTick();
-
-    setHasStarted(false);
-    setTimeRemaining(initialTime);
-    onReset();
-  };
-
-  // Handle start with sound
-  const handleStart = () => {
-    playTick();
-    onStart();
-  };
-
-  // Handle pause
-  const handlePause = () => {
-    // Clear the interval to stop countdown
-    if (timerIdRef.current) {
-      clearInterval(timerIdRef.current);
-      timerIdRef.current = undefined;
-    }
-
-    // Stop any playing audio
-    stopTick();
-
-    onStop();
-  };
+  }, [isRunning, onTimeUp, duration]);
 
   // Calculate progress percentage for the circle
-  const progressPercentage = (timeRemaining / initialTime) * 100;
+  const progressPercentage = (timeLeft / duration) * 100;
 
   // Calculate the SVG parameters for the circular progress
   const radius = 70;
@@ -206,18 +234,54 @@ const CountdownTimer: FC<CountdownTimerProps> = ({
 
   // Get the stroke color based on time remaining
   const getStrokeColor = () => {
-    if (timeRemaining < initialTime * 0.25) return "#ef4444"; // red-500
-    if (timeRemaining < initialTime * 0.5) return "#eab308"; // yellow-500
+    if (timeLeft < duration * 0.25) return "#ef4444"; // red-500
+    if (timeLeft < duration * 0.5) return "#eab308"; // yellow-500
     return "#3b82f6"; // blue-500
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center h-full">
-      <h2 className="text-2xl font-semibold text-blue-900 mb-6 self-start">
-        Timer
-      </h2>
+    <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col items-center">
+      <div className="text-center mb-4">
+        <div
+          className={`text-5xl font-bold mb-2 ${getColorClasses()} transition-colors duration-300`}
+        >
+          {formatTime(timeLeft)}
+        </div>
+        <div className="flex items-center justify-center text-gray-600">
+          <Clock className="w-4 h-4 mr-1" />
+          <span className="text-sm">Time Remaining</span>
+        </div>
+      </div>
 
-      <div className="relative w-56 h-56 mb-8">
+      <div className="flex justify-center space-x-2">
+        {isPaused ? (
+          <Button
+            onClick={startTimer}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
+          >
+            <Play className="w-4 h-4 mr-1" /> Start
+          </Button>
+        ) : (
+          <Button
+            onClick={pauseTimer}
+            className="bg-amber-600 hover:bg-amber-700 text-white"
+            size="sm"
+          >
+            <Pause className="w-4 h-4 mr-1" /> Pause
+          </Button>
+        )}
+        <Button
+          onClick={resetTimer}
+          variant="outline"
+          size="sm"
+          className="text-gray-600"
+        >
+          <RotateCcw className="w-4 h-4 mr-1" /> Reset
+        </Button>
+      </div>
+
+      <div className="relative w-56 h-56 mt-4">
         {/* Background circle */}
         <svg className="w-full h-full" viewBox="0 0 170 170">
           <circle
@@ -248,83 +312,10 @@ const CountdownTimer: FC<CountdownTimerProps> = ({
         {/* Timer text in center */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-5xl font-bold text-blue-900 font-mono">
-            {formatTime()}
+            {formatTime(timeLeft)}
           </span>
         </div>
       </div>
-
-      <div className="flex space-x-4 mb-6 w-full justify-center">
-        {!isRunning ? (
-          <Button
-            className="bg-blue-600 hover:bg-blue-700 text-lg py-6 px-8 flex items-center gap-2"
-            onClick={handleStart}
-            disabled={timeRemaining === 0}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Start Timer
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50 text-lg py-6 px-8 border-2 flex items-center gap-2"
-            onClick={handlePause}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                fillRule="evenodd"
-                d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Pause Timer
-          </Button>
-        )}
-
-        <Button
-          variant="outline"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 text-lg py-6 px-8 border-2 flex items-center gap-2"
-          onClick={handleReset}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              fillRule="evenodd"
-              d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Reset
-        </Button>
-      </div>
-
-      <p className="text-lg text-gray-600 text-center">
-        {isRunning
-          ? "Timer is running."
-          : hasStarted
-          ? "Timer is paused."
-          : "Timer is ready to start."}
-        {timeRemaining === 0 && " Time's up!"}
-      </p>
 
       {/* Audio indicator */}
       <div

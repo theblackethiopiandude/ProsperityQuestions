@@ -15,6 +15,7 @@ export default {
         "slide-in-left": "slideInLeft 0.5s ease-out",
         "slide-in-right": "slideInRight 0.5s ease-out",
         "bounce-slow": "bounce 2s infinite",
+        "ping-slow": "ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite",
         shake: "shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both",
       },
       keyframes: {

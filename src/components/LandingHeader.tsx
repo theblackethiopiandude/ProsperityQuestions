@@ -15,9 +15,9 @@ function LandingHeader() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="text-2xl font-bold">
-            ProsperityQ
-          </Link>
+          <div className="w-10 h-10">
+            <img src="/image.png" alt="" />
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -26,12 +26,6 @@ function LandingHeader() {
               className="font-medium hover:text-blue-200 transition-colors"
             >
               Home
-            </Link>
-            <Link
-              to="/questions"
-              className="font-medium hover:text-blue-200 transition-colors"
-            >
-              Questions
             </Link>
           </nav>
 
@@ -56,13 +50,6 @@ function LandingHeader() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
-              </Link>
-              <Link
-                to="/questions"
-                className="font-medium hover:text-blue-200 transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Questions
               </Link>
             </nav>
           </div>
